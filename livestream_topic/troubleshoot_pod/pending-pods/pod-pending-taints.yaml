@@ -1,0 +1,26 @@
+#Ensure all node have taints "app=pod-pending-taint" then this pod should be in pending state
+#Try: kubectl taint nodes node1 app=pod-pending-taint:NoSchedule
+#This Pod should be pending
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-without-toleration
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+---
+#This Pod should be running
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-toleration
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  tolerations:
+  - key: "app"
+    operator: "Equal"
+    value: "pod-pending-taint"
+    effect: "NoSchedule"

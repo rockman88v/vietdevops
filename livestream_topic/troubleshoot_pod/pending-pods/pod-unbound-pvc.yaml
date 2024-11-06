@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-unbound-pvc
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: my-storage
+      mountPath: /usr/share/nginx/html  # Đường dẫn mà PVC sẽ được mount vào
+  volumes:
+  - name: my-storage
+    persistentVolumeClaim:
+      claimName: my-pvc  # Tên PVC đã tạo
+---
+#Create the pvc then the pod will be running
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: csi-rbd-sc  # Đảm bảo rằng storage class này tồn tại trong cluster của bạn

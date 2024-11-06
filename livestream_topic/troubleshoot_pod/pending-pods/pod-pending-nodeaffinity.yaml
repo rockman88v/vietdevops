@@ -1,0 +1,20 @@
+#Ensure the label "app=pod-pending-nodeaffinity" is not set for any nodes then this pod should be in pending state
+#Assign the label "app=pod-pending-nodeaffinity" to a node then the Pod will be in running state
+#Try: kubectl label nodes [node-name] app=pod-pending-nodeaffinity
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-pending-nodeaffinity
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - pod-pending-nodeaffinity

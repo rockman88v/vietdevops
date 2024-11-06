@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-pending-anti-affinity
+spec:
+  replicas: 3  # Số lượng replicas
+  selector:
+    matchLabels:
+      app: anti-affinity-app  # Nhãn để tránh conflict với các pod khác
+  template:
+    metadata:
+      labels:
+        app: anti-affinity-app
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values: 
+                - anti-affinity-app
+            topologyKey: "kubernetes.io/hostname"  # Đặt để các pod không cùng chạy trên cùng một node
+---
+#Using preferredDuringSchedulingIgnoredDuringExecution to fix the pending problem
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-pending-antiaffinity
+spec:
+  replicas: 3  # Số lượng replicas
+  selector:
+    matchLabels:
+      app: antiaffinity-app  # Nhãn để tránh conflict với các pod khác
+  template:
+    metadata:
+      labels:
+        app: antiaffinity-app
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100  # Trọng số của tiêu chí lựa chọn
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values: 
+                  - antiaffinity-app
+              topologyKey: "kubernetes.io/hostname"  # Nơi các pod không nên chạy trên cùng một node

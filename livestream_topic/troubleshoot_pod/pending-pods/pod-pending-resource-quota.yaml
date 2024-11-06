@@ -1,0 +1,27 @@
+#set resource quot cho namespace demo
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: demo-resource-quota
+  namespace: demo
+spec:
+  hard:
+    requests.memory: "200Mi"  
+    limits.memory: "200Mi"     
+#
+---
+#Pod should be pending
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-pending-resource-quota
+  namespace: demo
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    resources:
+      requests:
+        memory: "250Mi" 
+      limits:
+        memory: "250Mi" 

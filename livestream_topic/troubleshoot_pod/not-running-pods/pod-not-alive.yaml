@@ -1,0 +1,15 @@
+#The container will not be marked as not alive and will be restarted continueously
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-not-alive
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    livenessProbe:
+      httpGet:
+        path: /non-existent  # Change path to / to make it work
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 5

@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-configmapkey-not-exists
+spec:
+  containers:
+  - name: nginx  # Bạn có thể sử dụng bất kỳ image nào, ở đây là nginx
+    image: nginx
+    env:
+    - name: DB_NAME
+      valueFrom:
+        configMapKeyRef:
+          name: my-configmap
+          key: dbname  # Key trong ConfigMap
+---
+#Create this configmap then Pod can be running
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-configmap
+data:
+  dbname: mydb

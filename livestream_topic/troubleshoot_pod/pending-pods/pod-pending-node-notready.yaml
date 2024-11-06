@@ -1,0 +1,13 @@
+#Stop all kubelet service in all worker node
+#Try: sudo service kubelet stop
+#When all worker nodes are notReady then this Pod should be pending
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-pending-node-notready
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+#Start kubelet service then this Pod should be running
+#Try: sudo service kubelet start

@@ -1,0 +1,15 @@
+#The container will not be marked as ready
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-not-ready
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    readinessProbe:
+      httpGet:
+        path: /non-existent  #Change this path to / to make it work 
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 5

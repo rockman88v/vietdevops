@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-wrong-image
+spec:
+  containers:
+  - name: wrong-nginx
+    image: wrong-nginx  # Hình ảnh không hợp lệ

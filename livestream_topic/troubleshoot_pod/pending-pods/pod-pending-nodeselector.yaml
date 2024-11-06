@@ -1,0 +1,13 @@
+#Ensure the label "app=pod-pending-nodeselector" is not set for any nodes then this pod should be in pending state
+#Assign the label "app=pod-pending-nodeselector" to a node then the Pod will be in running state
+#Try: kubectl label nodes [node-name] app=pod-pending-nodeselector
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-pending-nodeselector
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  nodeSelector:
+    app: pod-pending-nodeselector

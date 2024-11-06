@@ -1,0 +1,16 @@
+#Pod should be pending because no nodes have sufficient resource as per requests
+#Change resource request to 50Mi then it should be running
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-pending-resource-request
+  namespace: demo
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    resources:
+      requests:
+        memory: "5000Mi" 
+      limits:
+        memory: "5000Mi" 
