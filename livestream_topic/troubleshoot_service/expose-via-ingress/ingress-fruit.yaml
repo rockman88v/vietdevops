@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-fruit
+  namespace: demo
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: "app1.viettq.com"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/apple"
+        backend:
+          service:
+            name: apple
+            port:
+              number: 80
+      - pathType: Prefix
+        path: "/banana"
+        backend:
+          service:
+            name: banana
+            port:
+              number: 80
+      

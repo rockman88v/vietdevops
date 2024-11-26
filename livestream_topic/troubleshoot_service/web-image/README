@@ -1,0 +1,3 @@
+Tạo một webserver hiện thị trang chủ là một dòng hello + tên app lây từ biến môi trường là APPNAME
+Ví dụ sử dụng Docker:
+docker run -d -p 8080:80  -e APPNAME="CAPY-BARA" rockman88v/viettq-web:latest

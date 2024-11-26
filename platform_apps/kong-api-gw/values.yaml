@@ -1,0 +1,94 @@
+secrets:
+  server: "http://vault-active.vault:8200"
+  role: kong
+  #path: platform
+  key: kong-postgres-credential
+
+
+kong:
+  fullnameOverride: kong
+  env:
+    #admin_api_uri: https://kong-admin.staging.propertyguru.vn
+    #admin_api_uri: http://192.168.100.190:30101
+    #admin_gui_uri: https://kong-manager.staging.propertyguru.vn
+    #admin_gui_uri: http://192.168.100.190:30102
+    database: postgres
+    pg_database: kong
+    pg_host: postgresql
+    pg_password:
+      valueFrom:
+        secretKeyRef:
+          key: userpassword
+          name: kong-postgres-credential
+    pg_port: 5432
+    pg_schema: public
+    pg_timeout: 5000
+    pg_user: kong
+    #pg_ssl: "on"
+  image:
+    repository: kong/kong-gateway
+    tag: "3.3"
+  admin:
+    enabled: true
+    type: NodePort
+    http:
+      enabled: true
+      nodePort: 30101
+    tls:
+      enabled: false
+  proxy:
+    enabled: true
+    type: NodePort
+    http:
+      enabled: true
+      nodePort: 31003
+    tls:
+      enabled: false      
+  portalapi:
+    enabled: false
+  ingressController:
+    enabled: true
+    env:
+      kong_admin_tls_skip_verify: true
+    ingressClass: konggw
+  postgresql:
+    enabled: false
+  resources: {}
+  # limits:
+  #  cpu: 1
+  #  memory: 2G
+  # requests:
+  #  cpu: 1
+  #  memory: 2G  
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 1
+    behavior: {}
+    ## targetCPUUtilizationPercentage only used if the cluster doesn't support autoscaling/v2 or autoscaling/v2beta
+    targetCPUUtilizationPercentage:
+    ## Otherwise for clusters that do support autoscaling/v2 or autoscaling/v2beta, use metrics
+    metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+  serviceMonitor:
+    enabled: false
+    namespace: monitoring
+    labels:
+      release: kube-prometheus-stack
+
+  enterprise:
+    enabled: true
+    portal:
+      enabled: true
+    rbac:
+      enabled: false
+  manager:
+    enabled: false
+  portal:
+    enabled: false

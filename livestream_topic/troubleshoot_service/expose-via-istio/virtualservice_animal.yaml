@@ -1,0 +1,31 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: capybara
+  namespace: demo
+spec:
+  gateways: 
+  - istio-system/http-gateway  
+  hosts: 
+  - app2.viettq.com
+  http:
+  - match:
+    - uri:
+        prefix: /cat
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        host: cat
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /capybara
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        host: capybara
+        port:
+          number: 80

@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-fruit
+  namespace: demo
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: "app1.viettq.com"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/car"
+        backend:
+          service:
+            name: car
+            port:
+              number: 80
+      - pathType: Prefix
+        path: "/train"
+        backend:
+          service:
+            name: train
+            port:
+              number: 80
+      

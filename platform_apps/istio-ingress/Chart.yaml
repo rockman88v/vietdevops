@@ -1,0 +1,9 @@
+apiVersion: v2
+name: istio-ingress
+description: Manage ingress gateways for istio
+type: application
+version: 1.0.0
+dependencies:
+  - name: gateway
+    version: 1.19.0
+    repository: "https://istio-release.storage.googleapis.com/charts"

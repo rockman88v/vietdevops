@@ -1,0 +1,42 @@
+#gateway
+gatewayName: "http-gateway"
+enableTlsGateway: false
+tlsSecretName: ingress-cert
+shouldRedirectFromHttpToHttps: false
+#istiod.customresources.podmonitor.enable
+istiod:
+  customresources:
+    podmonitor: 
+      enabled: false
+    servicemonitor:
+      enabled: false
+    telemetry:
+      enabled: false
+  pilot:
+    enabled: false
+    autoscaleMin: 1
+    autoscaleMax: 1
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    cpu:
+      targetAverageUtilization: 150
+  global:
+    proxy:
+      # Exclude outbound traffic to these ports for all ports:
+      # - On-prem: MSSQL(1433), MySQL (3306,6033), PostgreSQL (5432), Redis (6379), Redis Sentinel (26379), MongoDB (27017)
+      # - In cluster: Vault (8200)
+      # - Confluent Cloud Kafka (9092)
+      # Note that this config is overridden, NOT merged with the `traffic.sidecar.istio.io/excludeOutboundPorts` annotation.
+      excludeOutboundPorts: "1433,3306,6033,5432,6379,26379,27017,8200,9092"
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 2000m
+          memory: 1024Mi
+  meshConfig:
+    enableTracing: false
+    accessLogEncoding: JSON

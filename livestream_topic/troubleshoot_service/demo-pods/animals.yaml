@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    app:  cat
+  name: cat
+  namespace: demo
+spec:
+  containers:  
+  - image: rockman88v/viettq-web:latest
+    name: cat
+    env:
+    - name: APPNAME
+      value: "cat"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    app:  capybara
+  name: capybara
+  namespace: demo
+spec:
+  containers:  
+  - image: rockman88v/viettq-web:latest
+    name: capybara
+    env:
+    - name: APPNAME
+      value: "CAPYBARA"
+---
+apiVersion: v1
+kind: Service
+metadata:  
+  labels:
+    app:  cat
+  name: cat
+  namespace: demo
+spec:
+  internalTrafficPolicy: Cluster  
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app:  cat
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:  
+  labels:
+    app:  capybara
+  name: capybara
+  namespace: demo
+spec:
+  internalTrafficPolicy: Cluster  
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app:  capybara
+  type: ClusterIP  

@@ -1,0 +1,31 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: train
+  namespace: demo
+spec:
+  gateways: 
+  - istio-system/http-gateway  
+  hosts: 
+  - app2.viettq.com
+  http:
+  - match:
+    - uri:
+        prefix: /car
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        host: car
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /train
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        host: train
+        port:
+          number: 80

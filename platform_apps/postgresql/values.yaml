@@ -1,0 +1,15 @@
+
+global:
+  defaultStorageClass: "ebs-storageclass"
+  storageClass: "ebs-storageclass"
+  postgresql:
+    auth:
+      postgresPassword: "MyPassword"
+      username: "kong"
+      password: "kongpass"
+      database: "kong"
+      existingSecret: ""
+      secretKeys:
+        adminPasswordKey: ""
+        userPasswordKey: ""
+        replicationPasswordKey: ""

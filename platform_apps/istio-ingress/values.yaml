@@ -1,0 +1,41 @@
+# This Secret must be created manually, otherwise the HTTPS handshake will fail.
+existingTlsSecretName: ingress-cert
+
+# https://istio.io/latest/docs/setup/additional-setup/gateway/
+gateway:
+  name: istio-ingressgateway
+  service:
+    type: NodePort
+    ports:
+      - name: status-port
+        port: 15021
+        protocol: TCP
+        targetPort: 15021
+      - name: http2
+        port: 80
+        protocol: TCP
+        targetPort: 80
+        nodePort: 31002
+      - name: https
+        port: 443
+        protocol: TCP
+        targetPort: 443
+        nodePort: 31443
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 2000m
+      memory: 1024Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 3
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 150
+
+certificates:
+  enable: false
+  targetSecretName: ingress-cert
+  dnsNames: []

@@ -1,0 +1,31 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: banana
+  namespace: demo
+spec:
+  gateways: 
+  - istio-system/http-gateway  
+  hosts: 
+  - app2.viettq.com
+  http:
+  - match:
+    - uri:
+        prefix: /apple
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        host: apple
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /banana
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        host: banana
+        port:
+          number: 80

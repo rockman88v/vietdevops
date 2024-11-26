@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app3-ingress
+  annotations:
+    konghq.com/strip-path: "true" # Loại bỏ path khỏi request khi gửi tới backend
+    kubernetes.io/ingress.class: "konggw" # Sử dụng Kong làm Ingress controller
+spec:
+  ingressClassName: "konggw"
+  rules:
+  - host: app3.viettq.com
+    http:
+      paths:
+      - path: /apple
+        pathType: Prefix
+        backend:
+          service:
+            name: apple
+            port:
+              number: 80
+      - path: /banana
+        pathType: Prefix
+        backend:
+          service:
+            name: banana
+            port:
+              number: 80

@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    app:  apple
+  name: apple
+  namespace: demo
+spec:
+  containers:  
+  - image: rockman88v/viettq-web:latest
+    name: apple
+    env:
+    - name: APPNAME
+      value: "apple"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    app:  banana
+  name: banana
+  namespace: demo
+spec:
+  containers:  
+  - image: rockman88v/viettq-web:latest
+    name: banana
+    env:
+    - name: APPNAME
+      value: "banana"
+---
+apiVersion: v1
+kind: Service
+metadata:  
+  labels:
+    app:  apple
+  name: apple
+  namespace: demo
+spec:
+  internalTrafficPolicy: Cluster  
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app:  apple
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:  
+  labels:
+    app:  banana
+  name: banana
+  namespace: demo
+spec:
+  internalTrafficPolicy: Cluster  
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app:  banana
+  type: ClusterIP  

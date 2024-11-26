@@ -1,0 +1,6 @@
+export POSTGRES_PASSWORD=$(kubectl get secret --namespace kong postgresql -o jsonpath="{.data.password}" | base64 -d)
+k create secret generic kong-postgres-credential --from-literal userpassword=$POSTGRES_PASSWORD
+
+helm dependency update
+helm install kong -f values.yaml .
+

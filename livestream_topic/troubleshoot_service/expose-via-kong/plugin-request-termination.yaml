@@ -1,0 +1,8 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: request-termination-example
+plugin: request-termination
+config:
+  status_code: 403
+  message: So long and thanks for all the fish!
