@@ -2,8 +2,8 @@
 master1 192.168.10.21
 master2 192.168.10.22
 master3 192.168.10.23
-worker1192.168.10.24
-worker2192.168.10.25
+worker1 192.168.10.24
+worker2 192.168.10.25
 
 #Giả định là đã cấu hình ssh-key cho phép SSH từ installation-server tới các node
 #Nếu chưa có thì tham khảo lệnh sau
