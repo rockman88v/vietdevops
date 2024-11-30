@@ -1,0 +1,127 @@
+#Mô hình cài đặt gồm 1 master và 2 worker có cấu hình IP như sau
+master1 192.168.10.21
+master2 192.168.10.22
+master3 192.168.10.23
+worker1192.168.10.24
+worker2192.168.10.25
+
+#Giả định là đã cấu hình ssh-key cho phép SSH từ installation-server tới các node
+#Nếu chưa có thì tham khảo lệnh sau
+#Cấu hình trust ssh key từ installation-server tới các node
+sysadmin@installation-server:~$ ssh-copy-id sysadmin@192.168.10.21
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/sysadmin/.ssh/id_rsa.pub"
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+sysadmin@192.168.10.21's password:
+Number of key(s) added: 1
+Now try logging into the machine, with:   "ssh 'sysadmin@192.168.10.21'"
+and check to make sure that only the key(s) you wanted were added.
+
+sysadmin@installation-server:~$ ssh-copy-id sysadmin@192.168.10.22
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/sysadmin/.ssh/id_rsa.pub"
+The authenticity of host '192.168.10.22 (192.168.10.22)' can't be established.
+ED25519 key fingerprint is SHA256:hncsNrV+9VrK/YCIhrxTRVBgAMnnF/wmHUedFWZMEnk.
+This host key is known by the following other names/addresses:
+    ~/.ssh/known_hosts:1: [hashed name]
+    ~/.ssh/known_hosts:4: [hashed name]
+    ~/.ssh/known_hosts:5: [hashed name]
+    ~/.ssh/known_hosts:6: [hashed name]
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+sysadmin@192.168.10.22's password:
+Number of key(s) added: 1
+Now try logging into the machine, with:   "ssh 'sysadmin@192.168.10.22'"
+and check to make sure that only the key(s) you wanted were added.
+#Sau bước này là có thể SSH tới các node không cần password
+
+#Giả định user trên các node có quyền thực hiện lệnh sudo mà không càn password. Nếu chưa có tham khảo lệnh sau:
+USER=sysadmin
+echo "$USER ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/$USER
+#Kiểm tra user có quyền thực hiện sudo without password bằng cách chạy lệnh sau, nếu kêt quả là 0 thì là ok, là 1 thì là chưa có quyền
+sudo -n true; echo $?
+
+
+
+#Các bước thực hiện (trên installation-server)
+- Cài đặt Docker trên installation-server
+- Tải repo của kubespray
+- Update cấu hình kubespray theo mô hình cài đặt mong muốn
+- Cấu hình hosts/DNS để phân giải được tên host của các node 
+- Tạo container Kubespray và mount các file cấu hình trên vào
+- Chạy ansible playbook trong container để dựng k8s
+
+#Update /etc/hosts
+192.168.10.21 master1 
+192.168.10.22 master2 
+192.168.10.23 master3 
+192.168.10.24 worker1 
+192.168.10.25 worker2 
+
+#download kubespray version 2.26 ~ k8s v1.30
+git clone https://github.com/kubernetes-sigs/kubespray.git --branch release-2.26
+cd kubespray
+cp -rf inventory/sample inventory/viettq-multimaster-cluster
+cd inventory/viettq-multimaster-cluster
+#Cấu trúc thư mục như sau
+└── viettq-multimaster-cluster
+    ├── credentials  [error opening dir]
+    ├── group_vars
+    │   ├── all
+    │   ├── etcd.yml
+    │   └── k8s_cluster
+    ├── hosts.yaml
+    ├── inventory.ini
+    └── patches
+        ├── kube-controller-manager+merge.yaml
+        └── kube-scheduler+merge.yaml
+
+#Một số cấu hình quan trọng
+#update file hosts.yaml 
+
+
+#cluster config
+group_vars/k8s_cluster/k8s-cluster.yml
+	kube_version: v1.30.4
+	kube_service_addresses: 10.233.0.0/18
+	kube_pods_subnet: 10.233.64.0/18
+	cluster_name: cluster.local
+	dns_mode: coredns
+	container_manager: containerd
+	kubernetes_audit: false
+	kube_network_plugin: calico
+
+
+
+#Enable/disable some addons (metric-server, kube-dashboard..)
+group_vars/k8s_cluster/addons.yml
+	metrics_server_enabled: false
+	ingress_nginx_enabled: false
+	cert_manager_enabled: false
+	argocd_enabled: false
+	kube_vip_enabled: false
+	
+#Global variables (load balancer config..)
+group_vars/all/all.yml
+	apiserver_loadbalancer_domain_name: ""
+	loadbalancer_apiserver:
+	  address: 
+	  port: 
+	loadbalancer_apiserver_port: 
+
+#Trong trường hợp này mình setup multi-master cluster không sử dụng external-loadbalancer cho kube-apiserver nên sẽ để các tham số trên như mặc định
+#Thực hiện pull image
+docker pull quay.io/kubespray/kubespray:v2.26.0
+#Start kubespray container
+docker run --rm -it --mount type=bind,source=/home/sysadmin/vietdevops/kubernetes_installation/multi-master-kubespray/kubespray/inventory/viettq-multimaster-cluster,dst=/inventory \
+  --mount type=bind,source=/home/sysadmin/.ssh/id_rsa,dst=/root/.ssh/id_rsa \
+  --mount type=bind,source=/home/sysadmin/.ssh/id_rsa,dst=/home/sysadmin/.ssh/id_rsa \
+  quay.io/kubespray/kubespray:v2.26.0 bash   
+	
+#Bắt đầu cài đặt k8s
+ansible-playbook -i /inventory/hosts.yaml cluster.yml --user=sysadmin --become
+
+#Cấu hình kubectl trên các master node
+mkdir -p $HOME/.kube
+sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config

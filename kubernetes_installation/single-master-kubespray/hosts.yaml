@@ -1,0 +1,21 @@
+[all]
+master  ansible_host=192.168.10.11      ip=192.168.10.11
+worker1 ansible_host=192.168.10.12      ip=192.168.10.12
+worker2 ansible_host=192.168.10.13      ip=192.168.10.13
+
+[kube_control_plane]
+master
+
+[etcd]
+master
+
+[kube_node]
+worker1
+worker2
+
+[calico_rr]
+
+[k8s_cluster:children]
+kube_control_plane
+kube_node
+calico_rr

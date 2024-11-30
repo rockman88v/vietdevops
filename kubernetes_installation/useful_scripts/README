@@ -1,0 +1,16 @@
+#script update_static_IP.sh
+Dùng để setup static IP cho server Ubuntu tạo trên Vmware workstation pro
+Giả định nó chứa cấu hình mặc định (do được clone từ một VM khác) là 192.168.10.x và cần update sang IP mới là 192.168.10.10 thì thực hiện như sau:
+./update_static_IP 192.168.10.10
+
+#script update_hostname.sh
+Dùng để update hostname cho một VM vừa được clone từ một VM khác
+
+#Script update_OS_setting.sh
+Cấu hình một số tham số cần thiết cho việc cài đặt k8s
+
+#Script disable_swap.sh
+Dùng để disable swap cho VM
+
+#Script install_docker.sh
+Dùng cho bước cài Docker lên installation-server để có thể sử dụng kubespray chạy trong container

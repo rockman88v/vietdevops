@@ -1,0 +1,63 @@
+#Mô hình cài đặt gồm 1 master và 2 worker có cấu hình IP như sau
+master  ip=192.168.10.11
+worker1 ip=192.168.10.12
+worker2 ip=192.168.10.13
+
+#Giả định là đã cấu hình ssh-key cho phép SSH từ installation-server tới các node
+
+#Các bước thực hiện (trên installation-server)
+- Cài đặt Docker trên installation-server
+- Tải repo của kubespray
+- Update cấu hình kubespray theo mô hình cài đặt mong muốn
+- Tạo container Kubespray và mount các file cấu hình trên vào
+- Chạy ansible playbook trong container để dựng k8s
+
+#download kubespray version 2.26 ~ k8s v1.30
+git clone https://github.com/kubernetes-sigs/kubespray.git --branch release-2.26
+cd kubespray
+cp -rf inventory/sample inventory/viettq-cluster
+cd inventory/viettq-cluster
+#Cấu trúc thư mục như sau
+└── viettq-cluster
+    ├── credentials  [error opening dir]
+    ├── group_vars
+    │   ├── all
+    │   ├── etcd.yml
+    │   └── k8s_cluster
+    ├── hosts.yaml
+    ├── inventory.ini
+    └── patches
+        ├── kube-controller-manager+merge.yaml
+        └── kube-scheduler+merge.yaml
+
+#Một số cấu hình quan trọng
+#update file hosts.yaml - Xem template ở file hosts.yaml
+
+#cluster config
+group_vars/k8s_cluster/k8s-cluster.yml
+	kube_version: v1.30.4
+	kube_service_addresses: 10.233.0.0/18
+	kube_pods_subnet: 10.233.64.0/18
+	cluster_name: cluster.local
+	dns_mode: coredns
+	container_manager: containerd
+	kubernetes_audit: false
+	kube_network_plugin: calico
+
+
+
+#Enable/disable some addons (metric-server, kube-dashboard..)
+group_vars/k8s_cluster/addons.yml
+	metrics_server_enabled: false
+	ingress_nginx_enabled: false
+	cert_manager_enabled: false
+	argocd_enabled: false
+	kube_vip_enabled: false
+	
+#Global variables (load balancer config..)
+group_vars/all/all.yml
+	apiserver_loadbalancer_domain_name: ""
+	loadbalancer_apiserver:
+	  address: 
+	  port: 
+	loadbalancer_apiserver_port: 
