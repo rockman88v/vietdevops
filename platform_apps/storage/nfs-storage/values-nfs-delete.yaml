@@ -1,0 +1,18 @@
+replicaCount: 1
+nfs:
+  server: 172.31.37.237
+  path: /data/delete
+  volumeName: nfs-subdir-external-provisioner-root
+  reclaimPolicy: Delete
+
+# For creating the StorageClass automatically:
+storageClass:
+  create: true
+  provisionerName: viettq-nfs-storage-delete-provisioner
+  defaultClass: false
+  name: nfs-subdir-delete
+  allowVolumeExpansion: true
+  reclaimPolicy: Delete
+  archiveOnDelete: false
+  accessModes: ReadWriteOnce
+  volumeBindingMode: Immediate

@@ -1,0 +1,27 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-pvc-retain
+spec:
+  storageClassName: nfs-subdir-retain
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod-with-pvc-retain
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    volumeMounts:
+    - name: log-volume
+      mountPath: /var/log/nginx  
+  volumes:
+  - name: log-volume
+    persistentVolumeClaim:
+      claimName: test-pvc-retain      

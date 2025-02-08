@@ -1,0 +1,15 @@
+replicaCount: 1
+nfs:
+  server: 172.31.37.237
+  path: /data/retain
+  reclaimPolicy: Retain
+storageClass:
+  create: true
+  provisionerName: viettq-nfs-storage-retain-provisioner
+  defaultClass: true
+  name: nfs-subdir-retain
+  allowVolumeExpansion: true
+  reclaimPolicy: Retain
+  archiveOnDelete: true
+  accessModes: ReadWriteOnce
+  volumeBindingMode: Immediate  

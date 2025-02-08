@@ -1,0 +1,27 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-pvc-delete
+spec:
+  storageClassName: nfs-subdir-delete
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod-with-pvc-delete
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    volumeMounts:
+    - name: log-volume
+      mountPath: /var/log/nginx  # Đây là nơi nginx sẽ lưu trữ log
+  volumes:
+  - name: log-volume
+    persistentVolumeClaim:
+      claimName: test-pvc-delete
