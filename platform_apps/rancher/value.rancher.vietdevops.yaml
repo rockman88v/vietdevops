@@ -1,0 +1,38 @@
+hostname: rancher.vietdevops.com
+### ingress ###
+# Readme for details and instruction on adding tls secrets.
+ingress:
+  # If set to false, ingress will not be created
+  # Defaults to true
+  # options: true, false
+  enabled: true
+  includeDefaultExtraAnnotations: true
+  extraAnnotations:
+    ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.org/ssl-services: rancher
+    nginx.org/redirect-to-https: "true"
+  ingressClassName: "nginx"
+  # backend port number
+  servicePort: 443
+
+  # configurationSnippet - Add additional Nginx configuration. This example statically sets a header on the ingress.
+  # configurationSnippet: |
+  #   more_set_input_headers "X-Forwarded-Host: {{ .Values.hostname }}";
+
+  tls:
+    # options: rancher, letsEncrypt, secret
+    source: rancher
+    secretName: tls-rancher-ingress
+
+### service ###
+# Override to use NodePort or LoadBalancer service type - default is ClusterIP
+service:
+  type: "ClusterIP"
+  annotations: {}    
+
+replicas: 1
+
+tls: external #ingress/external 
+
+bootstrapPassword: "Abcd_123"
+
