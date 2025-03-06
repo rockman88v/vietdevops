@@ -1,6 +1,6 @@
 replicaCount: 1
 nfs:
-  server: 172.31.37.237
+  server: 192.168.10.31
   path: /data/retain
   reclaimPolicy: Retain
 storageClass:

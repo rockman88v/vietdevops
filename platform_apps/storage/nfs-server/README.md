@@ -2,7 +2,7 @@
 Tham khảo tài liệu hướng dẫn chi tiết ở `https://hail-opinion-177.notion.site/NFS-Storage-installtion-caa274e602a84ad09268460c10eacb99?pvs=4`
 
 ## Cài đặt NFS server
-Thực hiện cài NFS-server:
+Thực hiện cài NFS-server (trên Ubuntu):
 ```bash
 #NFS Server installation
 sudo -s
@@ -61,9 +61,8 @@ sudo apt install nfs-common -y
 
 Sau đó cũng check lại từ node này đã thấy được các folder được share chưa:
 
-<aside>
 💡 Lưu ý `172.31.25.51` là PrivateIP của NFS-server
-</aside>
+
 
 ```bash
 ubuntu@node-1:~$ sudo showmount -e 172.31.25.51
