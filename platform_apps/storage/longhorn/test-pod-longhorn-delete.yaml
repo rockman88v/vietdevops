@@ -1,0 +1,18 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: pod-longhorn-delete
+spec:
+  volumes:
+    - name: longhorn-pvc-delete
+      persistentVolumeClaim:
+        claimName: longhorn-pvc-delete
+  containers:
+    - name: my-container
+      volumeMounts:
+        - name: longhorn-pvc-delete 
+          mountPath: /var/simple 
+      image: alpine
+      command: ["/bin/sh"]
+      args: ["-c", "while true; do date >> /var/simple/file.txt; sleep 5; done"]
+

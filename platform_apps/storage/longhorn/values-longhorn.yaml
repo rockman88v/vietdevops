@@ -1,0 +1,32 @@
+service:
+  ui:
+    #type: ClusterIP
+    type: NodePort
+    nodePort: 30888
+  manager:
+    type: ClusterIP
+persistence:
+  # -- Setting that allows you to specify the default Longhorn StorageClass.
+  defaultClass: true
+  # -- Replica count of the default Longhorn StorageClass.
+  defaultClassReplicaCount: 3
+  # -- Reclaim policy that provides instructions for handling of a volume after its claim is released. (Options: "Retain", "Delete")
+  reclaimPolicy: Delete    
+defaultSettings:    
+  defaultDataPath: /var/lib/longhorn
+  replicaSoftAntiAffinity: true
+  storageMinimalAvailablePercentage: 15
+  upgradeChecker: false
+  # -- Default number of replicas for volumes created using the Longhorn UI
+  defaultReplicaCount: 1
+  backupstorePollInterval: 500
+  nodeDownPodDeletionPolicy: do-nothing
+  guaranteedEngineManagerCPU: 5
+  guaranteedReplicaManagerCPU: 5
+
+ingress:  
+  enabled: true
+  ingressClassName: nginx
+  host: longhorn-ui.vietdevops.com
+
+namespaceOverride: "storage"
