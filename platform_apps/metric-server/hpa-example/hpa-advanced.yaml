@@ -1,0 +1,27 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:  
+  name: php-apache
+spec:
+  minReplicas: 1
+  maxReplicas: 10
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0  # Không có độ trễ khi scale up
+      policies:
+      - type: Percent
+        value: 100  # Tăng tối đa 100% số Pod hiện tại (gấp đôi)
+        periodSeconds: 15  # Mỗi 15 giây mới có thể scale tiếp
+    scaleDown:
+      stabilizationWindowSeconds: 60 # Khi tải thấp thì giữ ổn định 60s mới bắt đầu scale down
+  metrics:
+  - resource:
+      name: cpu
+      target:
+        averageUtilization: 50
+        type: Utilization
+    type: Resource  
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: php-apache
