@@ -1,0 +1,41 @@
+grafana:  
+  #adminUser: admin
+  #adminPassword: strongpassword
+  # Use an existing secret for the admin user.
+  admin:
+    ## Name of the secret. Can be templated.
+    existingSecret: "grafana-admin-user"
+    userKey: admin-user
+    passwordKey: admin-password
+  service:
+    type: NodePort
+    nodePort: 32080
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - grafana.vietdevops.com
+    path: /
+prometheus:
+  service:
+    type: NodePort
+    nodePort: 32090 
+  ingress:
+    enabled: true    
+    hosts:
+      - prometheus.vietdevops.com
+    paths:
+    - /      
+alertmanager:
+  service:
+    type: NodePort
+    nodePort: 30093 
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts: 
+      - alertmanager.vietdevops.com
+    paths:
+    - /
+
+  
