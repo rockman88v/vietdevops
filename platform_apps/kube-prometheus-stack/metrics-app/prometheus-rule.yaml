@@ -4,13 +4,13 @@ metadata:
   name: metrics-app-rules
   namespace: appteam1
   labels:
-    release: prometheus
+    release: prometheus-stack
 spec:
   groups:
     - name: metrics-app.rules
       rules:
         - alert: HighLatencyUserAPI
-          expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{endpoint="/api/user"}[5m])) by (le)) > 0.5
+          expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{exported_endpoint="/api/user"}[5m])) by (le,instance,namespace)) > 0.5
           for: 2m
           labels:
             severity: warning
@@ -20,7 +20,7 @@ spec:
             description: "p95 latency for /api/user > 0.5s for 2 minutes"
 
         - alert: HighLatencyOrderAPI
-          expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{endpoint="/api/order"}[5m])) by (le)) > 0.6
+          expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{exported_endpoint="/api/order"}[5m])) by (le,instance,namespace)) > 0.2
           for: 2m
           labels:
             severity: warning
@@ -30,7 +30,7 @@ spec:
             description: "p95 latency for /api/order > 0.6s for 2 minutes"
 
         - alert: HighLatencyPaymentAPI
-          expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{endpoint="/api/payment"}[5m])) by (le)) > 0.7
+          expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{endpoint="/api/payment"}[5m])) by (le,instance,namespace)) > 0.7
           for: 2m
           labels:
             severity: warning
@@ -41,13 +41,15 @@ spec:
 
         - alert: HighErrorRatePaymentAPI
           expr: |
-            sum(rate(http_requests_total{endpoint="/api/payment", http_status=~"5.."}[5m]))
+            sum by (namespace, instance) (rate(http_requests_total{exported_endpoint="/api/payment", http_status=~"5.."}[5m]))
             /
-            sum(rate(http_requests_total{endpoint="/api/payment"}[5m])) > 0.2
+            sum by (namespace, instance) (rate(http_requests_total{exported_endpoint="/api/payment"}[5m])) > 0.2
+
           for: 2m
           labels:
             severity: critical
             owner: appteam1
+            namespace: "{{ $labels.namespace }}"
           annotations:
             summary: "High error rate on /api/payment"
             description: "More than 20% of requests to /api/payment returned 5xx in the last 5 minutes"
