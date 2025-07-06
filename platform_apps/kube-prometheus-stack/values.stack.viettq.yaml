@@ -1,0 +1,203 @@
+grafana:  
+  #adminUser: admin
+  #adminPassword: strongpassword
+  # Use an existing secret for the admin user.
+  admin:
+    ## Name of the secret. Can be templated.
+    existingSecret: "grafana-admin-user"
+    userKey: admin-user
+    passwordKey: admin-password
+  service:
+    type: NodePort
+    nodePort: 32080
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - grafana.vietdevops.com
+    path: /
+prometheus:
+  service:
+    type: NodePort
+    nodePort: 32090 
+  ingress:
+    enabled: true    
+    hosts:
+      - prometheus.vietdevops.com
+    paths:
+    - /      
+alertmanager:
+  service:
+    type: NodePort
+    nodePort: 30093 
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts: 
+      - alertmanager.vietdevops.com
+    paths:
+    - /
+  config:
+    global:
+      resolve_timeout: 5m
+    inhibit_rules:
+      - source_matchers:
+          - 'severity = critical'
+        target_matchers:
+          - 'severity =~ warning|info'
+        equal:
+          - 'namespace'
+          - 'alertname'
+      - source_matchers:
+          - 'severity = warning'
+        target_matchers:
+          - 'severity = info'
+        equal:
+          - 'namespace'
+          - 'alertname'
+      - source_matchers:
+          - 'alertname = InfoInhibitor'
+        target_matchers:
+          - 'severity = info'
+        equal:
+          - 'namespace'
+    route:
+      #group_by: ['namespace']
+      group_by: ['namespace','alertname']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: 'null'
+      routes:
+      - receiver: 'null'
+        matchers:
+          - alertname =~ "InfoInhibitor|Watchdog"
+      - receiver: 'platform'
+        matchers:            
+          - namespace =~ "argocd|ingress-controller|monitoring"
+      - receiver: 'appteam1'
+        matchers:            
+          - namespace =~ "appteam1"
+    receivers:
+    - name: 'null'
+    - name: "platform"
+      slack_configs:
+      - api_url: "https://hooks.slack.com/services/T04HDDXQPFB/XXXXXXXXXX/YYYYYYYYYYYY"
+        channel: '#alert-platform'
+        color: '{{ template "slack.color" . }}'
+        title: '{{ template "slack.title" . }}'
+        text: '<@U04H38PPKLL> {{ template "slack.text" . }}' 
+        send_resolved: true
+        actions:
+          - type: button
+            text: 'Runbook :green_book:'
+            url: '{{ (index .Alerts 0).Annotations.runbook_url }}'
+          - type: button
+            text: 'Query :mag:'
+            url: '{{ (index .Alerts 0).GeneratorURL }}'
+          - type: button
+            text: 'Dashboard :chart_with_upwards_trend:'
+            url: '{{ (index .Alerts 0).Annotations.dashboard_url }}'
+          - type: button
+            text: 'Silence :no_bell:'
+            url: '{{ template "__alert_silence_link" . }}'
+    - name: "appteam1"
+      slack_configs:
+      - api_url: "https://hooks.slack.com/services/T04HDDXQPFB/XXXXXXXXXX/YYYYYYYYYYYY"
+        channel: '#alert-appteam1'
+        color: '{{ template "slack.color" . }}'
+        title: '{{ template "slack.title" . }}'
+        text: '<@U04H38PPKLL> {{ template "slack.text" . }}'
+        send_resolved: true
+        actions:
+          - type: button
+            text: 'Runbook :green_book:'
+            url: '{{ (index .Alerts 0).Annotations.runbook_url }}'
+          - type: button
+            text: 'Query :mag:'
+            url: '{{ (index .Alerts 0).GeneratorURL }}'
+          - type: button
+            text: 'Dashboard :chart_with_upwards_trend:'
+            url: '{{ (index .Alerts 0).Annotations.dashboard_url }}'
+          - type: button
+            text: 'Silence :no_bell:'
+            url: '{{ template "__alert_silence_link" . }}'
+    templates:
+    - '/etc/alertmanager/config/*.tmpl' 
+    - '/etc/alertmanager/configmaps/**/*.tmpl' 
+  templateFiles:
+    slack_message_template.tmpl: |- 
+        {{/* Alertmanager Silence link */}}
+        {{ define "__alert_silence_link" -}}
+            {{ .ExternalURL }}/#/silences/new?filter=%7B
+            {{- range .CommonLabels.SortedPairs -}}
+                {{- if ne .Name "alertname" -}}
+                    {{- .Name }}%3D"{{- .Value -}}"%2C%20
+                {{- end -}}
+            {{- end -}}
+            alertname%3D"{{- .CommonLabels.alertname -}}"%7D
+        {{- end }}
+
+        {{/* Severity of the alert */}}
+        {{ define "__alert_severity" -}}
+            {{- if eq .CommonLabels.severity "critical" -}}
+            *Severity:* `Critical`
+            {{- else if eq .CommonLabels.severity "warning" -}}
+            *Severity:* `Warning`
+            {{- else if eq .CommonLabels.severity "info" -}}
+            *Severity:* `Info`
+            {{- else -}}
+            *Severity:* :question: {{ .CommonLabels.severity }}
+            {{- end }}
+        {{- end }}
+
+        {{/* Title of the Slack alert */}}
+        {{ define "slack.title" -}}
+          [{{ .Status | toUpper -}}
+          {{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{- end -}}
+          ] {{ .CommonLabels.alertname }}
+        {{- end }}
+
+
+        {{/* Color of Slack attachment (appears as line next to alert )*/}}
+        {{ define "slack.color" -}}
+            {{ if eq .Status "firing" -}}
+                {{ if eq .CommonLabels.severity "warning" -}}
+                    warning
+                {{- else if eq .CommonLabels.severity "critical" -}}
+                    danger
+                {{- else -}}
+                    #439FE0
+                {{- end -}}
+            {{ else -}}
+            good
+            {{- end }}
+        {{- end }}
+
+        {{/* The text to display in the alert */}}
+        {{ define "slack.text" -}}
+
+            {{ template "__alert_severity" . }}
+            {{- if (index .Alerts 0).Annotations.summary }}
+            {{- "\n" -}}
+            *Summary:* {{ (index .Alerts 0).Annotations.summary }}
+            {{- end }}
+
+            {{ range .Alerts }}
+
+                {{- if .Annotations.description }}
+                {{- "\n" -}}
+                {{ .Annotations.description }}
+                {{- "\n" -}}
+                {{- end }}
+                {{- if .Annotations.message }}
+                {{- "\n" -}}
+                {{ .Annotations.message }}
+                {{- "\n" -}}
+                {{- end }}
+
+            {{- end }}
+
+        {{- end }}
+  alertmanagerSpec:
+    externalUrl: "https://alertmanager.vietdevops.com"  
