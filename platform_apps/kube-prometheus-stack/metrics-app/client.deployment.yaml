@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metrics-client
+  template:
+    metadata:
+      labels:
+        app: metrics-client
+    spec:
+      containers:
+      - name: client
+        image: rockman88v/metrics-client:latest
+        env:
+        - name: API_HOST
+          value: http://metrics-app.appteam1
+        - name: USER_INTERVAL
+          value: "2"
+        - name: ORDER_INTERVAL
+          value: "3"
+        - name: PAYMENT_INTERVAL
+          value: "5"

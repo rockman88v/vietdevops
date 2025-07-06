@@ -1,0 +1,73 @@
+{
+  "id": null,
+  "title": "Microservice API Metrics",
+  "timezone": "browser",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Requests",
+      "targets": [
+        {
+          "expr": "sum(increase(http_requests_total[5m]))",
+          "format": "time_series",
+          "legendFormat": "Total Requests",
+          "refId": "A"
+        }
+      ],
+      "datasource": "Prometheus",
+      "id": 1
+    },
+    {
+      "type": "graph",
+      "title": "Latency (p95) by Endpoint",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint))",
+          "legendFormat": "{{endpoint}}",
+          "refId": "A"
+        }
+      ],
+      "datasource": "Prometheus",
+      "id": 2
+    },
+    {
+      "type": "graph",
+      "title": "Request Count per API",
+      "targets": [
+        {
+          "expr": "sum by (endpoint) (increase(http_requests_total[5m]))",
+          "legendFormat": "{{endpoint}}",
+          "refId": "A"
+        }
+      ],
+      "datasource": "Prometheus",
+      "id": 3
+    },
+    {
+      "type": "graph",
+      "title": "5xx Error Rate for /api/payment",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{endpoint=\"/api/payment\", http_status=~\"5..\"}[5m])) / sum(rate(http_requests_total{endpoint=\"/api/payment\"}[5m]))",
+          "legendFormat": "Error Rate (5xx)",
+          "refId": "A"
+        }
+      ],
+      "datasource": "Prometheus",
+      "id": 4,
+      "yaxes": [
+        {
+          "format": "percent",
+          "min": 0,
+          "max": 1
+        },
+        {
+          "format": "short"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 30,
+  "version": 1,
+  "refresh": "10s"
+}
