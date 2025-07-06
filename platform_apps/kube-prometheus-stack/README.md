@@ -1,7 +1,7 @@
 # Cài đặt kube-prometheus-stack
 Link Video hướng dẫn: https://www.youtube.com/watch?v=Sz9lbFd35mg&t=16s
 
-## Cài đặt NFS server
+## Cài đặt kube-prometheus-stack
 Cài kube-prometheus-stack từ helm chart có sẵn ở repo này:
 ```bash
 tar -xzf kube-prometheus-stack-69.8.0.tgz
