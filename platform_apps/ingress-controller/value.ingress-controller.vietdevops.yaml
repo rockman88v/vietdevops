@@ -1,0 +1,29 @@
+controller:
+  ## The number of replicas of the Ingress Controller deployment.
+  replicaCount: 2
+
+  ## Configures the ingress class the Ingress Controller uses.
+  ingressClass:
+    ## A class of the Ingress Controller.
+    name: nginx
+    create: true
+    setAsDefaultIngress: true
+  service:
+    ## Creates a service to expose the Ingress Controller pods.
+    create: true
+    type: NodePort
+    externalTrafficPolicy: Cluster
+    httpPort:
+      ## Enables the HTTP port for the Ingress Controller service.
+      enable: true
+      port: 80
+      nodePort: 30080
+      targetPort: 80
+
+    httpsPort:
+      ## Enables the HTTPS port for the Ingress Controller service.
+      enable: true
+      port: 443
+      nodePort: 30443
+      targetPort: 443
+
