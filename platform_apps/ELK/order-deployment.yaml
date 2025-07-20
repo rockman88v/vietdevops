@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    meta.helm.sh/release-name: order
+  labels:
+    app.kubernetes.io/name: order
+  name: order
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: order
+      app.kubernetes.io/name: order
+  template:
+    metadata:
+      annotations:
+      labels:
+        app.kubernetes.io/instance: order
+        app.kubernetes.io/name: order
+    spec:
+      containers:
+        - name: order
+          image: busybox
+          imagePullPolicy: IfNotPresent
+          args: [/bin/sh, -c, while true; do echo "$(date) mynode=$MY_NODE_NAME podName=$MY_POD_NAME namespace=$MY_POD_NAMESPACE podIp=$MY_POD_IP serviceAccountName=$MY_POD_SERVICE_ACCOUNT";  sleep 1;  done]
+          env:
+          - name: MY_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: MY_POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: MY_POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: MY_POD_SERVICE_ACCOUNT
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.serviceAccountName

@@ -1,0 +1,45 @@
+logstashPipeline:
+ logstash.conf: |
+   input {
+     beats {
+       port => 5044
+     }
+   }
+   output { elasticsearch {
+     hosts => ["http://elasticsearch-master:9200"]
+     data_stream => "true"
+     data_stream_type => "logs"
+     data_stream_dataset => "default"
+     data_stream_namespace => "k8s"
+     }
+   }
+
+# logstashConfig:
+#   logstash.yml: |
+#     http.host: "0.0.0.0"
+#     xpack.monitoring.enabled: false   
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1000Mi"
+  limits:
+    cpu: "800m"
+    memory: "2000Mi"
+
+volumeClaimTemplate:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: nfs-subdir-delete
+  resources:
+    requests:
+      storage: 5Gi
+persistence:
+  enabled: true
+
+service:
+  type: ClusterIP
+  ports:
+    - name: beats
+      port: 5044
+      protocol: TCP
+      targetPort: 5044

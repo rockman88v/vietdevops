@@ -1,0 +1,36 @@
+replicas: 3
+minimumMasterNodes: 2
+
+resources:
+  requests:
+    cpu: "400m"
+    memory: "400Mi"
+  limits:
+    cpu: "800m"
+    memory: "1200Mi"
+
+volumeClaimTemplate:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: nfs-subdir-delete
+  resources:
+    requests:
+      storage: 10Gi
+
+extraInitContainers:
+  - name: file-permissions
+    image: busybox
+    command: ['chown', '-R', '1000:1000', '/usr/share/elasticsearch/']
+    volumeMounts:
+    - mountPath: /usr/share/elasticsearch/data
+      name: elasticsearch-master
+    securityContext:
+      privileged: true
+      runAsUser: 0
+
+antiAffinityTopologyKey: "kubernetes.io/hostname"
+antiAffinity: "soft"
+
+service:
+  enabled: true
+  type: NodePort
+  nodePort: "30092"

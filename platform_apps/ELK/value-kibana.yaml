@@ -1,0 +1,22 @@
+elasticsearchHosts: "http://elasticsearch-master:9200"
+resources:
+  requests:
+    cpu: "100m"
+    memory: "200Mi"
+  limits:
+    cpu: "400m"
+    memory: "512Mi"
+service:
+  type: NodePort
+  loadBalancerIP: ""
+  port: 5601
+  nodePort: "30094"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  pathtype: ImplementationSpecific
+  hosts:
+    - host: kibana.vietdevops.com
+      paths:
+        - path: /

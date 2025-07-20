@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    meta.helm.sh/release-name: billing
+  labels:
+    app.kubernetes.io/name: billing
+  name: billing
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: billing
+      app.kubernetes.io/name: billing
+  template:
+    metadata:
+      annotations:
+      labels:
+        app.kubernetes.io/instance: billing
+        app.kubernetes.io/name: billing
+    spec:
+      containers:
+        - name: billing
+          image: busybox
+          imagePullPolicy: IfNotPresent
+          args: [/bin/sh, -c, while true; do echo "$(date) mynode=$MY_NODE_NAME podName=$MY_POD_NAME namespace=$MY_POD_NAMESPACE podIp=$MY_POD_IP serviceAccountName=$MY_POD_SERVICE_ACCOUNT";  sleep 1;  done]
+          env:
+          - name: MY_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: MY_POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: MY_POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: MY_POD_SERVICE_ACCOUNT
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.serviceAccountName
+
