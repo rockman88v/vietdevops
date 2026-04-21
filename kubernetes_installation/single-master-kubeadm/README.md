@@ -23,7 +23,7 @@ Chạy lệnh join cluster này trên worker node với quyền sudo:
 ```
 sudo kubeadm join 192.168.10.10:6443 --token 64u766.jrbmerkca2yg0xe8 --discovery-token-ca-cert-hash sha256:7483c539db8f79717b6964523ba53e3f677359fbccb1d60fd175a1a57a58a8e0
 ```
-#Cấu hình kubectl trên master
+# Cấu hình kubectl trên master
 Chạy scrip `configure-kubectl.sh` trên master node, thay giá trị `HOME` đúng với thư mục home của user chạy script.
 Kiểm tra kết quả bằng lệnh
 ```
