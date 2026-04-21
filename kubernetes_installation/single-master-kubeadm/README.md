@@ -1,7 +1,7 @@
-#Mô hình cài đặt gồm 1 master và nhiều worker 
+# Mô hình cài đặt gồm 1 master và nhiều worker 
 Các server đã được cài đặt Ubuntu server 24.04, đã cài đặt static IP và set hostname
 
-#Tóm tắt các bước thực hiện
+# Tóm tắt các bước thực hiện
 - Bước 1: Cài đặt core-components: Thực hiện trên tất cả các node (master & worker)
 - Bước 2: Init Cluster: Thực hiện trên Master node
 - Bước 3: Join worker node vào cluster: Thực hiện trên các worker nodes
