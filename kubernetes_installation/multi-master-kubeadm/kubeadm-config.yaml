@@ -1,0 +1,55 @@
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: InitConfiguration
+nodeRegistration:
+  criSocket: unix:///run/containerd/containerd.sock
+ignorePreflightErrors:
+  - NumCPU
+  - Mem
+
+---
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: ClusterConfiguration
+kubernetesVersion: v1.34.7
+
+controlPlaneEndpoint: "192.168.10.50:6443"
+
+networking:
+  podSubnet: "10.244.0.0/16"
+  serviceSubnet: "10.96.0.0/12"
+  dnsDomain: "cluster.local"
+
+etcd:
+  local:
+    dataDir: "/var/lib/etcd"
+
+apiServer:
+  certSANs:
+    - "192.168.10.51"
+    - "master1"
+    - "192.168.10.52"
+    - "master2"
+    - "192.168.10.53"
+    - "master3"
+    - "192.168.10.54"
+    - "worker1"
+    - "192.168.10.55"
+    - "worker2"
+    - "192.168.10.50"
+    - "lb-svr"
+
+controllerManager:
+  extraArgs:
+    - name: bind-address
+      value: "0.0.0.0"
+
+scheduler:
+  extraArgs:
+    - name: bind-address
+      value: "0.0.0.0"
+
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+
+cgroupDriver: systemd
+serverTLSBootstrap: true
