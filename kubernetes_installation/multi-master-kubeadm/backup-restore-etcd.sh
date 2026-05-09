@@ -58,7 +58,7 @@ sudo mv /var/lib/etcd /var/lib/etcd-old-$(date +%Y%m%d-%H%M%S)
 sudo ETCDCTL_API=3 etcdutl snapshot restore $backupfile \
   --name=$MASTER1_NAME \
   --data-dir=/var/lib/etcd \
-  --initial-cluster="$MASTER1_NAME=https://$MASTER1_IP:2380,master2=https://$MASTER2_IP:2380,master3=https://$MASTER3_IP:2380" \
+  --initial-cluster="$MASTER1_NAME=https://$MASTER1_IP:2380,$MASTER2_NAME=https://$MASTER2_IP:2380,$MASTER3_NAME=https://$MASTER3_IP:2380" \
   --initial-cluster-token="etcd-cluster-1" \
   --initial-advertise-peer-urls="https://$MASTER1_IP:2380" 
 sudo chown -R root:root /var/lib/etcd  
@@ -69,20 +69,20 @@ scp $backupfile sysadmin@master3:/home/sysadmin
 backupfile="/home/sysadmin/etcd-snapshot-20260509-164735.db"
 sudo mv /var/lib/etcd /var/lib/etcd-old-$(date +%Y%m%d-%H%M%S)
 sudo ETCDCTL_API=3 etcdutl snapshot restore $backupfile \
-  --name=master2 \
+  --name=$MASTER2_NAME \
   --data-dir=/var/lib/etcd \
-  --initial-cluster="$MASTER1_NAME=https://$MASTER1_IP:2380,master2=https://$MASTER2_IP:2380,master3=https://$MASTER3_IP:2380" \
+  --initial-cluster="$MASTER1_NAME=https://$MASTER1_IP:2380,$MASTER2_NAME=https://$MASTER2_IP:2380,$MASTER3_NAME=https://$MASTER3_IP:2380" \
   --initial-cluster-token="etcd-cluster-1" \
   --initial-advertise-peer-urls="https://$MASTER2_IP:2380" 
 sudo chown -R root:root /var/lib/etcd  
 
-#restore on master3
+#restore on $MASTER3_NAME
 backupfile="/home/sysadmin/etcd-snapshot-20260509-164735.db"
 sudo mv /var/lib/etcd /var/lib/etcd-old-$(date +%Y%m%d-%H%M%S)
 sudo ETCDCTL_API=3 etcdutl snapshot restore $backupfile \
-  --name=master3 \
+  --name=$MASTER3_NAME \
   --data-dir=/var/lib/etcd \
-  --initial-cluster="$MASTER1_NAME=https://$MASTER1_IP:2380,master2=https://$MASTER2_IP:2380,master3=https://$MASTER3_IP:2380" \
+  --initial-cluster="$MASTER1_NAME=https://$MASTER1_IP:2380,$MASTER2_NAME=https://$MASTER2_IP:2380,$MASTER3_NAME=https://$MASTER3_IP:2380" \
   --initial-cluster-token="etcd-cluster-1" \
   --initial-advertise-peer-urls="https://$MASTER3_IP:2380"   
 sudo chown -R root:root /var/lib/etcd  
