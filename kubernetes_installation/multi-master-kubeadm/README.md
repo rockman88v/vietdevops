@@ -2,12 +2,15 @@
 Hướng dẫn này dành cho server ubuntun 24.4 và k8s version v1.34
 
 Các server đã được cài đặt Ubuntu server 24.04, đã cài đặt static IP và set hostname như sau (các bạn lưu ý đúng tên hostname và IP tương ứng với setup của các bạn):
-192.168.10.50 lb-svr
+
+```
+192.168.10.50 lb-svr #Làm LoadBalancer cho các master node
 192.168.10.51 master1
 192.168.10.52 master2
 192.168.10.53 master3
 192.168.10.54 worker1
 192.168.10.55 worker2
+```
 
 # Tóm tắt các bước thực hiện
 - Bước 1: Cài đặt core-components (Thực hiện trên tất cả các node master & worker): OS setting, cài và cấu hình Containerd, cài đặt kubeadm, kubelet, kubectl..
@@ -75,9 +78,6 @@ NODES=(
   "192.168.10.50 lb-svr"
 )
 ```
-
-## Bước 4: Cài đặt CNI (Calico)
-
 
 ## Bước 5: Join node vào cluster
 Chạy script `print-join-command.sh` trên node master1 (nơi vừa thực hiện init-cluster) để in ra lệnh join cho master và worker node
