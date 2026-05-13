@@ -1,0 +1,38 @@
+#Use kubeadmin config file to solve issue when host has multiple interface (IP)
+- name: Copy config file to master_init
+  template:
+    src: kubeadm-join.yaml.j2
+    dest: /tmp/kubeadm-join.yml
+  delegate_to: "{{ groups['master_init'][0] }}"
+  run_once: true
+
+- name: Upload control plane certs
+  shell: |
+    kubeadm init phase upload-certs --upload-certs --config /tmp/kubeadm-join.yml 2>/dev/null | tail -1
+  delegate_to: "{{ groups['master_init'][0] }}"
+  run_once: true
+  register: certificate_key
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Generate join command
+  shell: |
+    kubeadm token create --print-join-command --config /tmp/kubeadm-join.yml
+  delegate_to: "{{ groups['master_init'][0] }}"    
+  register: join_cmd
+
+- name: Join control plane
+  shell: |
+    {{ join_cmd.stdout }} --control-plane --certificate-key {{ certificate_key.stdout }} \
+    --cri-socket {{ cri_socket }} --apiserver-advertise-address {{ ansible_host }}
+  args:
+    creates: /etc/kubernetes/kubelet.conf    
+
+- name: Wait for node Ready
+  shell: |
+    kubectl wait node/{{ inventory_hostname }} \
+      --for=condition=Ready \
+      --timeout=600s
+  delegate_to: "{{ groups['master_init'][0] }}"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf    

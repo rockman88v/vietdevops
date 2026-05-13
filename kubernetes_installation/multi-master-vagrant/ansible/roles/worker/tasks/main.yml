@@ -1,0 +1,29 @@
+- name: Copy config file to master_init
+  template:
+    src: kubeadm-join.yaml.j2
+    dest: /tmp/kubeadm-join.yml
+  delegate_to: "{{ groups['master_init'][0] }}"
+  run_once: true
+
+- name: Generate join command
+  shell: |
+    kubeadm token create --print-join-command --config /tmp/kubeadm-join.yml
+  delegate_to: "{{ groups['master_init'][0] }}"
+  register: join_cmd
+
+- name: Join worker node
+  shell: |
+    {{ join_cmd.stdout }} \
+    --cri-socket {{ cri_socket }}
+  args:
+    creates: /etc/kubernetes/kubelet.conf
+
+- name: Wait for node Ready
+  shell: |
+    kubectl wait \
+      --for=condition=Ready \
+      node/{{ inventory_hostname }} \
+      --timeout=300s
+  delegate_to: "{{ groups['master_init'][0] }}"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf    

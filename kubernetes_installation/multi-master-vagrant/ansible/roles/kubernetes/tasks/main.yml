@@ -1,0 +1,73 @@
+- name: Remove old Kubernetes repo file
+  file:
+    path: /etc/apt/sources.list.d/kubernetes.list
+    state: absent
+    
+- name: Create keyring dir
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+
+- name: Add Kubernetes GPG key
+  shell: |
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_major_minor }}/deb/Release.key | gpg --dearmor --yes -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  args:
+    creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+- name: Add Kubernetes repo
+  copy:
+    dest: /etc/apt/sources.list.d/kubernetes.list
+    mode: '0644'
+    content: |
+      deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_major_minor }}/deb/ /
+
+- name: Install kube packages
+  apt:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    update_cache: yes
+
+- name: Hold packages
+  dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - kubelet
+    - kubeadm
+    - kubectl
+
+#Ensure kubelet select the right IP when the host has multiple network interface
+- name: Set kubelet node IP #In case node have multiple network interface
+  copy:
+    dest: /var/lib/kubelet/kubeadm-flags.env
+    content: |
+      KUBELET_KUBEADM_ARGS="--container-runtime-endpoint=unix:///run/containerd/containerd.sock --pod-infra-container-image=registry.k8s.io/pause:3.10 --node-ip={{ ansible_host }}"
+
+- name: Reload systemd
+  shell: systemctl daemon-reexec
+
+- name: Restart kubelet
+  systemd:
+    name: kubelet
+    state: restarted
+
+
+- name: Get kubeadm version
+  command: kubeadm version -o short
+  register: kubeadm_version_output
+  changed_when: false
+
+- name: Print kubeadm version
+  debug:
+    msg: "kubeadm version: {{ kubeadm_version_output.stdout }}"
+
+- name: Get kubelet version
+  command: kubelet --version
+  register: kubelet_version_output
+  changed_when: false
+
+- name: Print kubelet version
+  debug:
+    msg: "kubelet version: {{ kubelet_version_output.stdout }}"

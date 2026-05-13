@@ -1,0 +1,14 @@
+kubernetes_major_minor: "1.34"
+crictl_version: "1.34.0"
+calico_version: "3.30.2"
+
+pod_cidr: "10.244.0.0/16"
+service_cidr: "10.96.0.0/12"
+
+vip_address: "192.168.100.60"
+vip_interface: "eth1"
+control_plane_endpoint: "lb-svr:8443"
+
+cri_socket: "unix:///run/containerd/containerd.sock"
+cluster_reset: false #set to true to clean install cluster (reset old cluster) every time you run the playbook
+

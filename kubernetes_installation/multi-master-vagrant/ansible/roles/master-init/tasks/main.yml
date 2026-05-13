@@ -1,0 +1,125 @@
+#Use some additional setting in kubeadm config to solve problem of multi interface host
+- name: Generate kubeadm config
+  template:
+    src: kubeadm-config.yaml.j2
+    dest: /tmp/kubeadm-config.yaml
+
+- name: Init cluster
+  shell: |
+    kubeadm init --config /tmp/kubeadm-config.yaml 
+  args:
+    creates: /etc/kubernetes/admin.conf
+
+- name: Create kube config dir
+  file:
+    path: /home/vagrant/.kube
+    state: directory
+    mode: '0755'
+
+- name: Copy admin.conf
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/vagrant/.kube/config
+    remote_src: yes
+
+- name: Wait for API server
+  shell: |
+    kubectl get nodes
+  register: api_ready
+  retries: 30
+  delay: 10
+  until: api_ready.rc == 0
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+#Untaint first master node to make sure the Calico CNI can be ran event no worker node is available at this time
+- name: Remove control-plane taint for lab
+  shell: |
+    kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+  ignore_errors: yes
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+# ======================
+# KUBECTL TOOLS
+# ======================
+
+- name: Copy configure-kubectl script
+  copy:
+    src: configure-kubectl.sh
+    dest: /tmp/configure-kubectl.sh
+    mode: '0755'
+    
+- name: Run configure-kubectl script
+  shell: /tmp/configure-kubectl.sh
+  become: true
+  become_user: vagrant
+
+# ======================
+# CALICO
+# ======================
+
+- name: Install Calico CRDs
+  shell: |
+    kubectl apply --server-side -f \
+    https://raw.githubusercontent.com/projectcalico/calico/v{{ calico_version }}/manifests/operator-crds.yaml
+  register: calico_crd
+  failed_when:
+    - calico_crd.rc != 0
+    - "'AlreadyExists' not in calico_crd.stderr"
+  changed_when:
+    - "'created' in calico_crd.stdout"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Install Tigera operator
+  shell: |
+    kubectl apply -f \
+    https://raw.githubusercontent.com/projectcalico/calico/v{{ calico_version }}/manifests/tigera-operator.yaml
+  register: tigera_operator
+  failed_when:
+    - tigera_operator.rc != 0
+    - "'AlreadyExists' not in tigera_operator.stderr"
+  changed_when:
+    - "'created' in tigera_operator.stdout"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+#Do not use the default Installation object because we want to use custom Pod CIDR. This must be consistent with the kubeadm init task
+- name: Create Calico installation manifest
+  template:
+    src: calico-custom-resources.yaml.j2
+    dest: /tmp/calico-custom-resources.yaml
+
+- name: Apply Calico installation
+  shell: |
+    kubectl apply -f /tmp/calico-custom-resources.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Wait for calico pods to exist
+  shell: |
+    kubectl get pods -n calico-system -l k8s-app=calico-node --no-headers
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: calico_pods
+  retries: 30
+  delay: 10
+  until: calico_pods.stdout != ""
+  changed_when: false
+
+- name: Wait for calico-node pods ready
+  shell: |
+    kubectl wait  --namespace calico-system  --for=condition=Ready pod  -l k8s-app=calico-node --timeout=300s
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  changed_when: false
+ 
+- name: Wait for control-plane node Ready
+  shell: |
+    kubectl wait \
+      --for=condition=Ready nodes \
+      -l node-role.kubernetes.io/control-plane \
+      --timeout=300s
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf

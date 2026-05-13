@@ -1,0 +1,66 @@
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: InitConfiguration
+nodeRegistration:
+  criSocket: unix:///run/containerd/containerd.sock
+  kubeletExtraArgs:
+    - name: node-ip
+      value: "{{ ansible_host }}"
+localAPIEndpoint:
+  advertiseAddress: {{ ansible_host }}
+  bindPort: 6443    
+ignorePreflightErrors:
+  - NumCPU
+  - Mem
+
+---
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: ClusterConfiguration
+
+kubernetesVersion: v{{ kubernetes_version }}
+
+controlPlaneEndpoint: "{{ control_plane_endpoint }}"
+
+networking:
+  podSubnet: "{{ pod_cidr }}"
+  serviceSubnet: "{{ service_cidr }}"
+  dnsDomain: "cluster.local"
+
+etcd:
+  local:
+    dataDir: "/var/lib/etcd"  
+
+apiServer:
+  extraArgs:
+    - name: advertise-address
+      value: "0.0.0.0"
+  certSANs:
+{% for host in groups['masters'] %}
+    - "{{ host }}"
+    - "{{ hostvars[host]['ansible_host'] }}"
+{% endfor %}
+
+{% for host in groups['workers'] %}
+    - "{{ host }}"
+    - "{{ hostvars[host]['ansible_host'] }}"
+{% endfor %}
+
+{% for host in groups['loadbalancer'] %}
+    - "{{ host }}"
+    - "{{ hostvars[host]['ansible_host'] }}"
+{% endfor %}
+
+controllerManager:
+  extraArgs:
+    - name: bind-address
+      value: "0.0.0.0"
+
+scheduler:
+  extraArgs:
+    - name: bind-address
+      value: "0.0.0.0"
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+
+cgroupDriver: systemd
+serverTLSBootstrap: true

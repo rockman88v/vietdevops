@@ -1,0 +1,5 @@
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: {{ hostvars['master1']['ansible_host'] }}
+  bindPort: 6443

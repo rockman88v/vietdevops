@@ -1,0 +1,20 @@
+global
+    log /dev/log local0
+
+defaults
+    mode tcp
+    timeout connect 10s
+    timeout client 1m
+    timeout server 1m
+
+frontend kubernetes
+    bind *:8443
+    default_backend kubernetes-master-nodes
+
+backend kubernetes-master-nodes
+    balance roundrobin
+    option tcp-check
+
+{% for host in groups['masters'] %}
+    server {{ host }} {{ hostvars[host]['ansible_host'] }}:6443 check
+{% endfor %}

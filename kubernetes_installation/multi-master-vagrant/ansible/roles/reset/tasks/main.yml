@@ -1,0 +1,178 @@
+###############################################################################
+# kubeadm reset
+###############################################################################
+
+- name: Reset kubeadm
+  shell: |
+    kubeadm reset -f --cri-socket {{ cri_socket }}
+  ignore_errors: true
+
+###############################################################################
+# Stop Kubernetes related services
+###############################################################################
+
+- name: Stop kubelet
+  systemd:
+    name: kubelet
+    state: stopped
+  ignore_errors: true
+
+- name: Stop containerd
+  systemd:
+    name: containerd
+    state: stopped
+  ignore_errors: true
+
+- name: Stop keepalived
+  systemd:
+    name: keepalived
+    state: stopped
+  ignore_errors: true
+
+- name: Stop haproxy
+  systemd:
+    name: haproxy
+    state: stopped
+  ignore_errors: true
+
+###############################################################################
+# Remove CNI configs
+###############################################################################
+
+- name: Remove CNI directories
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/cni/net.d
+    - /opt/cni/bin
+    - /var/lib/cni
+
+###############################################################################
+# Remove Kubernetes directories
+###############################################################################
+
+- name: Remove Kubernetes directories
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/kubernetes
+    - /var/lib/kubelet
+    - /var/lib/calico
+    - /var/run/calico
+    - /etc/calico
+    - /home/vagrant/.kube
+    - /root/.kube
+
+###############################################################################
+# Remove etcd data (only control-plane)
+###############################################################################
+
+- name: Remove etcd data
+  file:
+    path: /var/lib/etcd
+    state: absent
+  when: "'control_plane' in group_names"
+
+###############################################################################
+# Cleanup iptables
+###############################################################################
+
+- name: Flush iptables
+  shell: |
+    iptables -F
+    iptables -t nat -F
+    iptables -t mangle -F
+    iptables -X
+  ignore_errors: true
+
+###############################################################################
+# Cleanup IPVS tables
+###############################################################################
+
+- name: Clear IPVS tables
+  shell: |
+    ipvsadm --clear
+  ignore_errors: true
+
+###############################################################################
+# Remove network interfaces created by CNI
+###############################################################################
+
+- name: Remove cni0 interface
+  shell: |
+    ip link delete cni0
+  ignore_errors: true
+
+- name: Remove flannel.1 interface
+  shell: |
+    ip link delete flannel.1
+  ignore_errors: true
+
+- name: Remove vxlan.calico interface
+  shell: |
+    ip link delete vxlan.calico
+  ignore_errors: true
+
+- name: Remove tunl0 interface
+  shell: |
+    ip link delete tunl0
+  ignore_errors: true
+
+###############################################################################
+# Cleanup containerd containers
+###############################################################################
+
+- name: Start containerd temporarily
+  systemd:
+    name: containerd
+    state: started
+    enabled: true
+
+- name: Remove all containers
+  shell: |
+    crictl rm -fa
+  ignore_errors: true
+
+- name: Remove all pod sandboxes
+  shell: |
+    crictl rmp -fa
+  ignore_errors: true
+
+###############################################################################
+# Remove HA configs
+###############################################################################
+
+# - name: Remove keepalived config
+#   file:
+#     path: /etc/keepalived
+#     state: absent
+
+# - name: Remove haproxy config
+#   file:
+#     path: /etc/haproxy
+#     state: absent
+
+###############################################################################
+# Reload systemd
+###############################################################################
+
+- name: Reload systemd
+  shell: systemctl daemon-reload
+
+###############################################################################
+# Restart services
+###############################################################################
+
+- name: Restart containerd
+  systemd:
+    name: containerd
+    state: restarted
+    enabled: true
+
+- name: Restart kubelet
+  systemd:
+    name: kubelet
+    state: restarted
+    enabled: true

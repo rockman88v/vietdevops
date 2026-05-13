@@ -1,0 +1,46 @@
+---
+- name: Base setup
+  hosts: k8s
+  become: yes
+  roles:
+    - common
+    - containerd
+    - kubernetes
+
+- name: Reset cluster if needed
+  hosts: master_join
+  become: yes
+  roles:
+    - role: reset
+      tags: reset
+      when: cluster_reset | bool
+
+- name: Configure VIP and LB
+  hosts: masters
+  become: yes
+  roles:
+    - role: vip
+      tags: vip
+    - role: loadbalancer
+      tags: loadbalancer
+
+- name: Init first master
+  hosts: master_init
+  become: yes
+  roles:
+    - role: master-init
+      tags: master-init
+
+- name: Join other masters
+  hosts: master_join
+  become: yes
+  roles:
+    - role: master-join
+      tags: master-join
+
+- name: Join workers
+  hosts: workers
+  become: yes
+  roles:
+    - role: worker
+      tags: worker

@@ -1,0 +1,50 @@
+- name: Disable swap
+  shell: |
+    swapoff -a
+    sed -i '/ swap / s/^/#/' /etc/fstab
+
+- name: Load kernel modules
+  copy:
+    dest: /etc/modules-load.d/k8s.conf
+    content: |
+      overlay
+      br_netfilter
+
+- name: Enable modules
+  shell: |
+    modprobe overlay
+    modprobe br_netfilter
+
+- name: Sysctl config
+  copy:
+    dest: /etc/sysctl.d/k8s.conf
+    content: |
+      net.bridge.bridge-nf-call-iptables=1
+      net.bridge.bridge-nf-call-ip6tables=1
+      net.ipv4.ip_forward=1
+
+- name: Apply sysctl
+  shell: sysctl --system
+
+- name: Install dependencies
+  apt:
+    name:
+      - curl
+      - apt-transport-https
+      - ca-certificates
+      - gpg
+      - bash-completion
+    update_cache: yes
+
+- name: Manage /etc/hosts for k8s cluster
+  blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} ANSIBLE MANAGED K8S HOSTS"
+    block: |
+      {% for host in groups['k8s'] %}
+      {{ hostvars[host].ansible_host }} {{ host }}
+      {% endfor %}
+
+      {% for host in groups['loadbalancer'] %}
+      {{ hostvars[host].ansible_host }} {{ host }}
+      {% endfor %}    

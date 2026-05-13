@@ -1,0 +1,22 @@
+- name: Install keepalived
+  apt:
+    name: keepalived
+    state: present
+    update_cache: yes
+
+- name: Copy health check script
+  copy:
+    src: check_haproxy.sh
+    dest: /etc/keepalived/check_haproxy.sh
+    mode: '0755'
+
+- name: Configure keepalived
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+
+- name: Enable keepalived
+  systemd:
+    name: keepalived
+    enabled: yes
+    state: restarted
