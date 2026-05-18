@@ -8,10 +8,6 @@ secrets:
 kong:
   fullnameOverride: kong
   env:
-    #admin_api_uri: https://kong-admin.staging.propertyguru.vn
-    #admin_api_uri: http://192.168.100.190:30101
-    #admin_gui_uri: https://kong-manager.staging.propertyguru.vn
-    #admin_gui_uri: http://192.168.100.190:30102
     database: postgres
     pg_database: kong
     pg_host: postgresql
